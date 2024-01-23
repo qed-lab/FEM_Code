@@ -9,6 +9,8 @@ public class FEM {
     static public int[] Score = new int[20400];
     static public int[] Trial = new int[20400];
     static public double[] Composite = new double[20400];
+    static public double[] CueType = new double[20400];
+    static public double[] GazeProximity = new double[20400];
     static public int PreviousSubject;
     static public int[] Angle = new int[20400];
     static public int AngleDiff;
@@ -27,6 +29,7 @@ public class FEM {
     static public double AlreadyDoing;
     static public double JustShifted;
     static public double TaskTrial;
+    static public double CueInfluence;
     static public int StrategySwitch;
     static public int LastSwitch;
     static public double PreviousTaskTrial;
@@ -62,11 +65,13 @@ public class FEM {
             new StreamReader(@"C:\Users\mnzra\OneDrive\Desktop\Summer and Fall 2023 - University of Utah\FEM_Code\data\QJEP paper data\Experiment 2\Strategy.txt"),
             new StreamReader(@"C:\Users\mnzra\OneDrive\Desktop\Summer and Fall 2023 - University of Utah\FEM_Code\data\QJEP paper data\Experiment 2\Angle.txt"),
             new StreamReader(@"C:\Users\mnzra\OneDrive\Desktop\Summer and Fall 2023 - University of Utah\FEM_Code\data\QJEP paper data\Experiment 2\Morph.txt"),
-            new StreamReader(@"C:\Users\mnzra\OneDrive\Desktop\Summer and Fall 2023 - University of Utah\FEM_Code\data\QJEP paper data\Experiment 2\Expected.txt")
+            new StreamReader(@"C:\Users\mnzra\OneDrive\Desktop\Summer and Fall 2023 - University of Utah\FEM_Code\data\QJEP paper data\Experiment 2\Expected.txt"),
+            new StreamReader(@"C:\Users\mnzra\OneDrive\Desktop\Summer and Fall 2023 - University of Utah\FEM_Code\data\QJEP paper data\Experiment 2\Cues.txt"),
+            new StreamReader(@"C:\Users\mnzra\OneDrive\Desktop\Summer and Fall 2023 - University of Utah\FEM_Code\data\QJEP paper data\Experiment 2\GazeProximity.txt")
         };
         
         // Headers for the output file
-        outFile.WriteLine("Subject,Condition,Trial,Prediction,StrategySwitch,Strategy,JustShifted,StrategiesTried,PlanningPrep,Composite,PerformanceDip,BadShift,NoImprovement,TaskShift,AlreadyDoing,TaskTrial,Flexibility,NumComponents");
+        outFile.WriteLine("Subject,Condition,Trial,CueType,Prediction,StrategySwitch,Strategy,JustShifted,StrategiesTried,PlanningPrep,Composite,PerformanceDip,BadShift,NoImprovement,TaskShift,AlreadyDoing,TaskTrial,Flexibility,NumComponents");
 
         // Read the data
         // int i = 0;
@@ -81,8 +86,10 @@ public class FEM {
                 string line5 = files[5].ReadLine();
                 string line6 = files[6].ReadLine();
                 string line7 = files[7].ReadLine();
+                string line8 = files[8].ReadLine(); //added for cue type
+                string line9 = files[9].ReadLine(); //added for gaze proximity
 
-                if (line0 == null || line1 == null || line2 == null || line3 == null || line4 == null || line5 == null || line6 == null || line7 == null) 
+                if (line0 == null || line1 == null || line2 == null || line3 == null || line4 == null || line5 == null || line6 == null || line7 == null || line8 == null) 
                 { break;}
                 
 
@@ -100,6 +107,7 @@ public class FEM {
                 Angle[iterator] = int.Parse(line5);
                 Morph[iterator] = int.Parse(line6);
                 Expected[iterator] = line7;
+                CueType[iterator] = double.Parse(line8);
             } catch (IOException) {
                 // Reached end of file
                 break;
@@ -193,12 +201,13 @@ public class FEM {
         // Alpha(4) modifies the influence of the number of strategies tried
         // Alpha(5) modifies the influence a dip in performance
         // Alpha(6) modifies the degree to which a person is biased to be affected by a lack of improvement
+        // alpha(7) modifies the influence of the cueing technique used. Covert is 0.5 while overt is 1.0
 
         alpha[2] = 1; // default is 1
 
         // Make the prediction
 
-        Prediction = (alpha[2] * (TaskShift + AlreadyDoing)) + TaskTrial + JustShifted + StrategiesTried + PlanningPrep + PerformanceDip + BadShift + NoImprovement + Flexibility;
+        Prediction = (alpha[2] * (TaskShift + AlreadyDoing)) + TaskTrial + JustShifted + StrategiesTried + PlanningPrep + PerformanceDip + CueInfluence + BadShift + NoImprovement + Flexibility;
 
         // Prediction = TaskShift;
 
@@ -230,7 +239,7 @@ public class FEM {
         // Figure Flexibility
         Flexibility = Flexibility + ((StrategySwitch - Prediction) / 10);
 
-        outFile.WriteLine(Subject[iterator] + "," + Condition[iterator] + "," + Trial[iterator] + ", " + Prediction + "," + StrategySwitch + "," + Strategy[iterator] + "," + JustShifted + "," + StrategiesTried + "," + PlanningPrep + "," + Composite[iterator] + "," + PerformanceDip + "," + BadShift + "," + NoImprovement + "," + TaskShift + "," + AlreadyDoing + "," + TaskTrial + "," + Flexibility + "," + NumComponents);
+        outFile.WriteLine(Subject[iterator] + "," + Condition[iterator] + "," + Trial[iterator] + ", " + CueType[iterator] + ", " + Prediction + "," + StrategySwitch + "," + Strategy[iterator] + "," + JustShifted + "," + StrategiesTried + "," + PlanningPrep + "," + Composite[iterator] + "," + PerformanceDip + "," + BadShift + "," + NoImprovement + "," + TaskShift + "," + AlreadyDoing + "," + TaskTrial + "," + Flexibility + "," + NumComponents);
 
     }
 
@@ -239,6 +248,7 @@ public class FEM {
         AssessTaskShift();
         AssessAlreadyDoing();
         AssessSerialPosition();
+        AssessCueInfluence();
     }
 
     static void PersonBasedFactors(){
@@ -466,10 +476,35 @@ public class FEM {
         }
     }
 
+    static void AssessCueInfluence(){
+        //depending on which type of cue (overt or covert) is used, they are more likely to encounter event boundary/switch action
+
+        //Alpha[7] = 0.01; //this is arbitrary, some people may be more susceptible to cueing techniques than others
+        if (CueType[iterator] == 1.0) //Overt
+        {
+            CueInfluence = 
+        }
+        else //Covert
+        {
+
+        }
+
+        //value depends on what type of cue it is, covert cues less likely to cause a shift (overt = 1, covert = 0.5)
+
+        CueInfluence = 1 - Math.Pow(1 + Alpha[7], -CueType[iterator]);
+
+        // more code to control how big of a modification should cues introduce
+        // gaze proximity is a multiplier (0.5-1.0), the close the gaze is the closer the number is to 1.0
+        
+
+    }
+
     private void Button1_Click(object sender, EventArgs e){        
         Main();
     }
 
 
 }
-
+// notes: 
+// plot all function inside methods and see how they look
+//extract math equations
