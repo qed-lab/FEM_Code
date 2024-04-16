@@ -53,21 +53,21 @@ public class FEM {
     static public int WM;
     static public double Flexibility;
 
-    static public StreamWriter outFile = new StreamWriter(@"C:\Users\mnzra\OneDrive\Desktop\Summer and Fall 2023 - University of Utah\FEM_Code\data\QJEP paper data\Experiment 2\output.csv");
+    static public StreamWriter outFile = new StreamWriter(@"C:\Users\anonymous\OneDrive\Desktop\SF2023\FEM_Code\data\QJEP paper data\Experiment 2\output_NoDifference_override.csv");
 
     static void Main() {
         // Load the data
         StreamReader[] files = {
-            new StreamReader(@"C:\Users\mnzra\OneDrive\Desktop\Summer and Fall 2023 - University of Utah\FEM_Code\data\QJEP paper data\Experiment 2\Subject.txt"),
-            new StreamReader(@"C:\Users\mnzra\OneDrive\Desktop\Summer and Fall 2023 - University of Utah\FEM_Code\data\QJEP paper data\Experiment 2\Condition.txt"),
-            new StreamReader(@"C:\Users\mnzra\OneDrive\Desktop\Summer and Fall 2023 - University of Utah\FEM_Code\data\QJEP paper data\Experiment 2\Trial.txt"),
-            new StreamReader(@"C:\Users\mnzra\OneDrive\Desktop\Summer and Fall 2023 - University of Utah\FEM_Code\data\QJEP paper data\Experiment 2\Composite.txt"),
-            new StreamReader(@"C:\Users\mnzra\OneDrive\Desktop\Summer and Fall 2023 - University of Utah\FEM_Code\data\QJEP paper data\Experiment 2\Strategy.txt"),
-            new StreamReader(@"C:\Users\mnzra\OneDrive\Desktop\Summer and Fall 2023 - University of Utah\FEM_Code\data\QJEP paper data\Experiment 2\Angle.txt"),
-            new StreamReader(@"C:\Users\mnzra\OneDrive\Desktop\Summer and Fall 2023 - University of Utah\FEM_Code\data\QJEP paper data\Experiment 2\Morph.txt"),
-            new StreamReader(@"C:\Users\mnzra\OneDrive\Desktop\Summer and Fall 2023 - University of Utah\FEM_Code\data\QJEP paper data\Experiment 2\Expected.txt"),
-            new StreamReader(@"C:\Users\mnzra\OneDrive\Desktop\Summer and Fall 2023 - University of Utah\FEM_Code\data\QJEP paper data\Experiment 2\Cues.txt"),
-            new StreamReader(@"C:\Users\mnzra\OneDrive\Desktop\Summer and Fall 2023 - University of Utah\FEM_Code\data\QJEP paper data\Experiment 2\GazeProximity.txt")
+            new StreamReader(@"C:\Users\anonymous\OneDrive\Desktop\SF2023\FEM_Code\data\QJEP paper data\Experiment 2\Subject.txt"),
+            new StreamReader(@"C:\Users\anonymous\OneDrive\Desktop\SF2023\FEM_Code\data\QJEP paper data\Experiment 2\Condition.txt"),
+            new StreamReader(@"C:\Users\anonymous\OneDrive\Desktop\SF2023\FEM_Code\data\QJEP paper data\Experiment 2\Trial.txt"),
+            new StreamReader(@"C:\Users\anonymous\OneDrive\Desktop\SF2023\FEM_Code\data\QJEP paper data\Experiment 2\Composite.txt"),
+            new StreamReader(@"C:\Users\anonymous\OneDrive\Desktop\SF2023\FEM_Code\data\QJEP paper data\Experiment 2\Strategy.txt"),
+            new StreamReader(@"C:\Users\anonymous\OneDrive\Desktop\SF2023\FEM_Code\data\QJEP paper data\Experiment 2\Angle.txt"),
+            new StreamReader(@"C:\Users\anonymous\OneDrive\Desktop\SF2023\FEM_Code\data\QJEP paper data\Experiment 2\Morph.txt"),
+            new StreamReader(@"C:\Users\anonymous\OneDrive\Desktop\SF2023\FEM_Code\data\QJEP paper data\Experiment 2\Expected.txt"),
+            new StreamReader(@"C:\Users\anonymous\OneDrive\Desktop\SF2023\FEM_Code\data\QJEP paper data\Experiment 2\CueType_NoDifference.txt"),      //this changes according to simulation #
+            new StreamReader(@"C:\Users\anonymous\OneDrive\Desktop\SF2023\FEM_Code\data\QJEP paper data\Experiment 2\GazeProximity.txt") //this changes according to simulation #
         };
         
         // Headers for the output file
@@ -89,7 +89,7 @@ public class FEM {
                 string line8 = files[8].ReadLine(); //added for cue type
                 string line9 = files[9].ReadLine(); //added for gaze proximity
 
-                if (line0 == null || line1 == null || line2 == null || line3 == null || line4 == null || line5 == null || line6 == null || line7 == null || line8 == null) 
+                if (line0 == null || line1 == null || line2 == null || line3 == null || line4 == null || line5 == null || line6 == null || line7 == null || line8 == null || line9 == null) 
                 { break;}
                 
 
@@ -108,6 +108,7 @@ public class FEM {
                 Morph[iterator] = int.Parse(line6);
                 Expected[iterator] = line7;
                 CueType[iterator] = double.Parse(line8);
+                GazeProximity[iterator] = double.Parse(line9);
             } catch (IOException) {
                 // Reached end of file
                 break;
@@ -161,7 +162,7 @@ public class FEM {
                 MaxTime = 0;
                 WM = 4; //default working memory size
 
-                for (int j = 1; j <= 10; j++) //clear the buffer
+                for (int j = 1; j <= 10; j++) //clear the bufferf
                 {
                     RecentTimes[j] = 0;
                 }
@@ -201,14 +202,14 @@ public class FEM {
         // Alpha(4) modifies the influence of the number of strategies tried
         // Alpha(5) modifies the influence a dip in performance
         // Alpha(6) modifies the degree to which a person is biased to be affected by a lack of improvement
-        // alpha(7) modifies the influence of the cueing technique used. Covert is 0.5 while overt is 1.0
+        // alpha(7) modifies the influence of the cueing technique used.
 
         alpha[2] = 1; // default is 1
 
         // Make the prediction
 
-        Prediction = (alpha[2] * (TaskShift + AlreadyDoing)) + TaskTrial + JustShifted + StrategiesTried + PlanningPrep + PerformanceDip + CueInfluence + BadShift + NoImprovement + Flexibility;
-
+        //Prediction = (alpha[2] * (TaskShift + AlreadyDoing)) + TaskTrial + JustShifted + StrategiesTried + PlanningPrep + PerformanceDip + CueInfluence + BadShift + NoImprovement + Flexibility;
+        Prediction = JustShifted + PlanningPrep + CueInfluence + Flexibility;
         // Prediction = TaskShift;
 
         // Keep prediction no greater than 1 and no less than 0
@@ -477,26 +478,19 @@ public class FEM {
     }
 
     static void AssessCueInfluence(){
-        //depending on which type of cue (overt or covert) is used, they are more likely to encounter event boundary/switch action
-
-        //Alpha[7] = 0.01; //this is arbitrary, some people may be more susceptible to cueing techniques than others
-        if (CueType[iterator] == 1.0) //Overt
-        {
-            CueInfluence = 
-        }
-        else //Covert
-        {
-
-        }
-
-        //value depends on what type of cue it is, covert cues less likely to cause a shift (overt = 1, covert = 0.5)
-
-        CueInfluence = 1 - Math.Pow(1 + Alpha[7], -CueType[iterator]);
-
-        // more code to control how big of a modification should cues introduce
-        // gaze proximity is a multiplier (0.5-1.0), the close the gaze is the closer the number is to 1.0
+        //depending on which type of cue (overt or covert) is used, they are more likely to encounter an event boundary/switch actions
         
-
+        Alpha[7] = 0.1; //this is arbitrary, some people may be more susceptible to cueing techniques than others
+        double adjustedGazeProximity = GazeProximity[iterator];
+        if (CueType[iterator] > 0.5)
+        {
+            adjustedGazeProximity = 1; //the dominant cue overrides gaze proximity
+        }
+        //CueType[iterator]
+        //value depends on what type of cue it is, covert cues less likely to cause a shift (overt = 1, covert = 0.5)
+        //gaze proximity is a multiplier (0.5-1.0), the close the gaze is the closer the number is to 1.0.
+        CueInfluence = 1 - Math.Pow(1 + Alpha[7], -1*adjustedGazeProximity);
+        
     }
 
     private void Button1_Click(object sender, EventArgs e){        
@@ -505,6 +499,3 @@ public class FEM {
 
 
 }
-// notes: 
-// plot all function inside methods and see how they look
-//extract math equations
